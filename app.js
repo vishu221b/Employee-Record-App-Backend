@@ -15,7 +15,6 @@ mongoose.connect(process.env.DATABASE_URL, {
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json()); // to receive raw json
-// app.use(bodyParser);
 app.use(employeeRoutes);
 
 let $port = process.env.PORT;
