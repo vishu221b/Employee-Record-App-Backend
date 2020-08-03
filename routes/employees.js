@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Employee = require('../models/employee');
 
 router.get('/employee/getAll', (req, res) => {
@@ -7,8 +8,32 @@ router.get('/employee/getAll', (req, res) => {
         .then(allEmployees => {
             res.status(200).json({response: "SUCCESS", allEmployees: allEmployees});
         })
-        .catch(
-            error => console.log(error));
+        .catch(error => {
+            console.log(error.stack);
+            res.status(404).json({error: "There was some error.", exceptionMessage: error.message});
+        });    
+});
+
+router.get('/employee/getAllActive', (req, res)=> {
+    Employee.find({is_active: true})
+        .then(allEmployees => {
+            res.status(200).json({response: "SUCCESS", allEmployees: allEmployees});
+        })
+        .catch(error => {
+            console.log(error.stack);
+            res.status(404).json({error: "There was some error.", exceptionMessage: error.message});
+        });
+});
+
+router.get('/employee/getAllInActive', (req, res)=> {
+    Employee.find({is_active: false})
+        .then(allEmployees => {
+            res.status(200).json({response: "SUCCESS", allEmployees: allEmployees});
+        })
+        .catch(error => {
+            console.log(error.stack);
+            res.status(404).json({error: "There was some error.", exceptionMessage: error.message});
+        });
 });
 
 router.get('/employee/getById', (req, res) => {
@@ -22,9 +47,9 @@ router.get('/employee/getById', (req, res) => {
                 console.log(response);
                 res.status(200).json({response: "SUCCESS", employeeDetails: response});
             })
-            .catch(anyError => {
-                console.log(anyError);
-                res.status(404).json({error: "There was some error.", exceptionMessage: anyError.stack});
+            .catch(error => {
+                console.log(error.stack);
+                res.status(404).json({error: "There was some error.", exceptionMessage: error.message});
             });
     }
 });
@@ -44,7 +69,8 @@ router.get('/employee/getByCode', (req, res) => {
                 res.status(200).json({response: "SUCCESS", employeeDetails: response});
             })
             .catch(error => {
-                console.log(error);
+                console.log(error.stack);
+                res.status(404).json({error: "There was some error.", exceptionMessage: error.message});
             });
     }
 });
@@ -89,9 +115,42 @@ router.post('/employee/createNew', (req, res) => {
                 res.status(201).json({ response: "SUCCESS", employeeDetails:emp});
             })
             .catch(error => {
-                console.log(error);
-                res.status(500).json({error: "Something went wrong."});
+                console.log(error.stack);
+                res.status(404).json({error: "There was some error.", exceptionMessage: error.message});
             });
+    }
+});
+
+router.put('/updateEmployee', (req, res) => {
+    let { employeeId, employeeName, employeeDesignation, employeeSalary, employeeDepartment, employeeCode } = req.body;
+    let userRequestDetails = {};
+    if (!employeeId){
+        res.status(400).json({error: "Missing employee id."});
+    }else{
+        if (employeeName){
+            userRequestDetails.name = employeeName;
+        }
+        if (employeeDesignation){
+            userRequestDetails.designation = employeeDesignation.toUpperCase();
+        }
+        if (employeeDepartment){
+            userRequestDetails.department = employeeDepartment.toUpperCase();
+        }
+        if (employeeCode){
+            userRequestDetails.code = employeeCode.toUpperCase();
+        }
+        if (employeeSalary){
+            userRequestDetails.salary = employeeSalary < 10000?10000:employeeSalary;
+        }
+        Employee.findByIdAndUpdate(employeeId, userRequestDetails, {new: true})
+        .then(response => {
+            console.log("Update user response is: ", response);
+            res.status(200).json({response:"SUCCESS", updatedEmployeeDetails: response});
+        })
+        .catch(error => {
+            console.log(error.stack);
+            res.status(404).json({error: "There was some error.", exceptionMessage: error.message});
+        });
     }
 });
 

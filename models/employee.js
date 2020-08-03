@@ -5,7 +5,8 @@ let employeeSchema = new mongoose.Schema({
     designation: String,
     salary: Number,
     department: String,
-    code: String
+    code: String,
+    is_active: {type: Boolean, default: true}
 });
 
 module.exports = mongoose.model('Employee', employeeSchema);
