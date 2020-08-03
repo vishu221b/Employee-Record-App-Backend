@@ -5,10 +5,48 @@ const Employee = require('../models/employee');
 router.get('/employee/getAll', (req, res) => {
     Employee.find({})
         .then(allEmployees => {
-            res.status(200).json({response: allEmployees});
+            res.status(200).json({response: "SUCCESS", allEmployees: allEmployees});
         })
         .catch(
             error => console.log(error));
+});
+
+router.get('/employee/getById', (req, res) => {
+    let userId = req.query.userId;
+    if (!userId){
+        res.status(400).json({error: "Missing user Id."});
+    }
+    else{
+        Employee.findById(userId)
+            .then(response => {
+                console.log(response);
+                res.status(200).json({response: "SUCCESS", employeeDetails: response});
+            })
+            .catch(anyError => {
+                console.log(anyError);
+                res.status(404).json({error: "There was some error.", exceptionMessage: anyError.stack});
+            });
+    }
+});
+
+router.get('/employee/getByCode', (req, res) => {
+    let userEmployeeCode = req.query.employeeCode;
+    if (!userEmployeeCode){
+        res.status(400).json({error: "Missing employee code."});
+    }
+    else{
+        Employee.findOne({code: userEmployeeCode.toUpperCase()})
+            .then(response => {
+                console.log(response);
+                if(response == null){
+                    response = `No employee found for code ${userEmployeeCode}.`;
+                }
+                res.status(200).json({response: "SUCCESS", employeeDetails: response});
+            })
+            .catch(error => {
+                console.log(error);
+            });
+    }
 });
 
 router.post('/employee/createNew', (req, res) => {
