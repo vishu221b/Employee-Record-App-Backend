@@ -166,5 +166,37 @@ router.put('/updateEmployee', (req, res) => {
     }
 });
 
+router.delete('/employee/:employeeCode', (req, res) => {
+    let employeeCode = req.params.employeeCode;
+    Employee.find({code: employeeCode.toUpperCase()})
+        .then(r => {
+            console.log(r);
+            if (r.length<=0){
+                res.status(404).json({error: `No employee found for code ${employeeCode}.`});
+            }
+            else if (r && r[0].is_active){
+                Employee.updateOne({code: employeeCode}, {"$set": {is_active: false}})
+                    .then(response => {
+                        console.log(response);
+                        res.status(200).json({response: "SUCCESS"});
+                    })
+                    .catch(error => {
+                        console.log(error.stack);
+                        res.status(404).json({error: "There was some error.", exceptionMessage: error.message});
+                    });
+            }else{
+                res.status(404).json({error: `No active employee found for code ${employeeCode}.`});
+            }
+        })
+        .catch(error => {
+            console.log(error.stack);
+            res.status(404).json({error: "There was some error.", exceptionMessage: error.message});
+        });
+});
+
+router.delete('/*', (req, res) => {
+    res.status(400).json({error: "Not Found."});
+});
+
 
 module.exports = router;
