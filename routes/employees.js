@@ -82,6 +82,10 @@ router.post('/employee/createNew', (req, res) => {
         res.status(400).json({error: "Employee details missing."});
     }
     let { employeeName, employeeDesignation, employeeSalary, employeeDepartment, employeeCode } = req.body;
+    if (!employeeCode){
+        errorTracker.push("employeeCode is a required field.");
+        errorCount++;
+    }
     if (!employeeName){
         errorTracker.push("employeeName is a required field.");
         errorCount++;
@@ -94,31 +98,39 @@ router.post('/employee/createNew', (req, res) => {
         errorTracker.push("employeeDepartment is a required field.");
         errorCount++;
     }
-    if (!employeeCode){
-        errorTracker.push("employeeCode is a required field.");
-        errorCount++;
-    }
     if (errorCount > 0){
         res.status(400).json({error: errorTracker});
     }
     else{
-        let newEmployee = {
-            name: employeeName,
-            designation: employeeDesignation.toUpperCase(),
-            salary: employeeSalary ? employeeSalary: 10000,
-            department: employeeDepartment.toUpperCase(),
-            code: employeeCode.toUpperCase()
-        }
-        Employee.create(newEmployee)
-            .then(emp => { 
-                console.log(emp);
-                res.status(201).json({ response: "SUCCESS", employeeDetails:emp});
-            })
-            .catch(error => {
+        Employee.find({code: employeeCode.toUpperCase()})
+            .then(resp => {
+                console.log(resp);
+                if(!resp || resp ==  null || resp.length <= 0){
+                    let newEmployee = {
+                        name: employeeName,
+                        designation: employeeDesignation.toUpperCase(),
+                        salary: employeeSalary ? employeeSalary: 10000,
+                        department: employeeDepartment.toUpperCase(),
+                        code: employeeCode.toUpperCase()
+                    }
+                    Employee.create(newEmployee)
+                        .then(emp => { 
+                        console.log(emp);
+                        res.status(201).json({ response: "SUCCESS", employeeDetails:emp});
+                        })
+                        .catch(error => {
+                            console.log(error.stack);
+                            res.status(404).json({error: "There was some error.", exceptionMessage: error.message});
+                        });
+                }
+                else{
+                    res.status(400).json({error:`Employee with code ${employeeCode} already exists.`});
+                }
+            }).catch(error => {
                 console.log(error.stack);
                 res.status(404).json({error: "There was some error.", exceptionMessage: error.message});
             });
-    }
+        }
 });
 
 router.put('/updateEmployee', (req, res) => {
@@ -127,6 +139,9 @@ router.put('/updateEmployee', (req, res) => {
     if (!employeeId){
         res.status(400).json({error: "Missing employee id."});
     }else{
+        if (employeeCode){
+            userRequestDetails.code = employeeCode.toUpperCase();
+        }
         if (employeeName){
             userRequestDetails.name = employeeName;
         }
@@ -135,9 +150,6 @@ router.put('/updateEmployee', (req, res) => {
         }
         if (employeeDepartment){
             userRequestDetails.department = employeeDepartment.toUpperCase();
-        }
-        if (employeeCode){
-            userRequestDetails.code = employeeCode.toUpperCase();
         }
         if (employeeSalary){
             userRequestDetails.salary = employeeSalary < 10000?10000:employeeSalary;
