@@ -2,11 +2,16 @@ const express = require('express');
 const router = express.Router();
 const Employee = require('../models/employee');
 
-router.get('/', (req, res) => {
-    res.json({response: "Working proper!"});
+router.get('/employee/getAll', (req, res) => {
+    Employee.find({})
+        .then(allEmployees => {
+            res.status(200).json({response: allEmployees});
+        })
+        .catch(
+            error => console.log(error));
 });
 
-router.post('/createEmployee/v1', (req, res) => {
+router.post('/employee/createNew', (req, res) => {
     let errorTracker = [];
     let errorCount = 0;
     if (!req.body){
@@ -36,14 +41,14 @@ router.post('/createEmployee/v1', (req, res) => {
         let newEmployee = {
             name: employeeName,
             designation: employeeDesignation.toUpperCase(),
-            salary: employeeSalary ? employeeSalary: 0,
+            salary: employeeSalary ? employeeSalary: 10000,
             department: employeeDepartment.toUpperCase(),
             code: employeeCode.toUpperCase()
         }
         Employee.create(newEmployee)
             .then(emp => { 
-                console.log(emp)
-                res.status(201).json(emp);
+                console.log(emp);
+                res.status(201).json({ response: "SUCCESS", employeeDetails:emp});
             })
             .catch(error => {
                 console.log(error);
